@@ -17,6 +17,7 @@ from pathlib import Path
 
 from . import memory as memorylib
 from .context_manager import ContextManager
+from .redaction import redact_artifact as redact_artifact_value
 from .run_store import RunStore
 from .task_state import TaskState
 from . import tools as toolkit
@@ -493,21 +494,12 @@ class Pico:
         return text
 
     def redact_artifact(self, value, key=None):
-        if key and self.is_secret_env_name(key):
-            return REDACTED_VALUE
-        if isinstance(value, dict):
-            return {
-                str(item_key): self.redact_artifact(item_value, key=item_key)
-                for item_key, item_value in value.items()
-            }
-        if isinstance(value, list):
-            return [self.redact_artifact(item, key=key) for item in value]
-        if isinstance(value, tuple):
-            return [self.redact_artifact(item, key=key) for item in value]
-        if isinstance(value, str):
-            redacted = self.redact_text(value)
-            return redacted
-        return value
+        return redact_artifact_value(
+            value,
+            key=key,
+            is_secret_name=self.is_secret_env_name,
+            secret_values=[item_value for _, item_value in self.detected_secret_env_items()],
+        )
 
     def shell_env(self):
         env = {
