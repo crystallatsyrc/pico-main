@@ -1,5 +1,27 @@
 # pico
 
+## TrajectoryDatasetV1 export (benchmark fixtures)
+
+After a run has finished, export its trace and, optionally, the matching
+benchmark evaluator row (`rows` from the evaluator artifact):
+
+```bash
+python -m pico.trajectory_dataset path/to/run/trace.jsonl \
+  --benchmark-rows path/to/benchmark-results.json --output trajectories.jsonl
+```
+
+Pass multiple trace paths in the same order as `rows`; omit `--benchmark-rows`
+for unlabeled runs. Each JSONL line contains one run with ordered model-attempt
+`state`/`action`/`observation`/`terminal_outcome` transitions. The final outcome
+includes verifier and pass/fail labels when a benchmark row is supplied. The
+exporter reads completed traces only; it never reruns tools or verifiers. It
+rejects incomplete or out-of-order traces. Its default output excludes dynamic
+timestamps, run and checkpoint IDs, durations, and raw verifier output. Use
+`--include-provenance` to include run IDs and timestamps in a separate field;
+that option makes output bytes run-specific. Trace tool results remain clipped
+to the length recorded by the runtime, and malformed model response text is
+not available in the trace.
+
 `pico` 是一个面向代码仓库的轻量本地 coding agent。它直接跑在终端里，先看当前工作区，再用一组受约束的工具去读文件、改文件、跑命令，并把会话状态保存在本地 `.pico/` 目录里。
 
 它更像一个能在仓库里持续工作的命令行助手，不是纯聊天窗口。你可以拿它做代码排查、测试修复、仓库分析，或者让它在当前项目里执行一次性的工程任务。
